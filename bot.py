@@ -10,8 +10,8 @@ start_timer = None
 seats=["N","E","S","W"]
 
 ##set these vvariables
-userId=8
-sectionId=1
+userId=2576
+sectionId=1176
 #tableNo=1,only needed if jooining initially. assuming director as preseated te bot for now so no need to join seat
 
 seat="N" #NEWS
