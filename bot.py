@@ -1,4 +1,3 @@
-
 import asyncio
 import time
 import socketio
@@ -41,7 +40,7 @@ async def connect():
 @sio.event(namespace='/auth')
 async def login(data):
     print('logged in')
-    await sio.emit('join-game',{ "sectionId": 1 }, namespace='/section')
+    await sio.emit('join-game',{ "sectionId": sectionId }, namespace='/section')
 
 #section namespace
 @sio.event(namespace='/section')
@@ -55,7 +54,7 @@ async def join_game_button(data):
 @sio.event(namespace='/section')
 async def section(data):
     print('got section')
-    await sio.emit('join-table',{ "sectionId": 1, "roundDataId": 0 }, namespace='/mtable')
+    await sio.emit('join-table',{ "sectionId": sectionId, "roundDataId": 0 }, namespace='/mtable')
 
 #mtable namespace
 @sio.event(namespace='/mtable')
