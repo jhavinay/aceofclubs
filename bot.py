@@ -76,7 +76,7 @@ async def bid_play(data):
 
 @sio.event(namespace='/mtable')
 async def player_join(data):
-    print('got player_join'+json.dumps(data))
+    print('got player_join')
     for index, player in enumerate(data) :
         if player["id"] ==userId:
             global seat
