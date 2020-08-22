@@ -3,8 +3,8 @@ import time
 import socketio
 import json
 loop = asyncio.get_event_loop()
-sio = socketio.AsyncClient(logger=True, engineio_logger=True,ssl_verify=False)
-#sio = socketio.AsyncClient(ssl_verify=False)
+#sio = socketio.AsyncClient(logger=True, engineio_logger=True,ssl_verify=False)
+sio = socketio.AsyncClient(ssl_verify=False)
 start_timer = None
 seats=["N","E","S","W"]
 
