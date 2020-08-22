@@ -3,8 +3,8 @@ import time
 import socketio
 import json
 loop = asyncio.get_event_loop()
-#sio = socketio.AsyncClient(logger=True, engineio_logger=True,ssl_verify=False)
-sio = socketio.AsyncClient(ssl_verify=False)
+sio = socketio.AsyncClient(logger=True, engineio_logger=True,ssl_verify=False)
+#sio = socketio.AsyncClient(ssl_verify=False)
 start_timer = None
 seats=["N","E","S","W"]
 
@@ -77,7 +77,7 @@ async def bid_play(data):
 async def player_join(data):
     print('got player_join')
     for index, player in enumerate(data) :
-        if player["id"] ==userId:
+        if player !=None and player["id"] ==userId:
             global seat
             seat=seats[index]
             global seatIndex
