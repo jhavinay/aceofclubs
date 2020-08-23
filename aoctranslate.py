@@ -1,12 +1,25 @@
+if __name__ == "__main__":
+    import find_src
+    import re
+
 import re
 from core.position import Position
 from core.hand import Hand
+from core.suit import SPADES, HEARTS, DIAMONDS, CLUBS
+from core.card import Card
 from core.call import Call, Pass, Dbl, Rdbl
 
 pattern_rdbl = re.compile('.*xx$')
 pattern_dbl = re.compile('^[^x]*x$')
 
+
 class AOCTranslate():
+    suitmap = {0: CLUBS, 1: DIAMONDS, 2: HEARTS, 3: SPADES}
+    ranks = range(13)
+    rankstr = \
+        ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
+    rankmap = dict(zip(ranks, rankstr))
+
     @classmethod
     def position(cls, pos):
         return Position.from_char(pos)
@@ -36,3 +49,39 @@ class AOCTranslate():
             return "  xx"
         else:
             return call.name.lower() + "  "
+
+    # Given a card numbering from 0 (C2) to 52 (SA), get a card object
+    @classmethod
+    def card(cls, cardno):
+        suit = AOCTranslate.suitmap[int(cardno/13)]
+        rank = AOCTranslate.rankmap[cardno % 13]
+        return Card(suit, rank)
+
+    @classmethod
+    def cardstr(cls, card):
+        return 13 * card.suit.index + card.index()
+
+if __name__ == "__main__":
+    assert AOCTranslate.callstring(Pass()) == "ps"
+    assert re.match(AOCTranslate.callstring(Dbl()), '  x[^x]*')
+    assert re.match(AOCTranslate.callstring(Rdbl()), '  xx$')
+
+    assert AOCTranslate.card(0).name == "2C"
+    assert AOCTranslate.card(12).name == "AC"
+    assert AOCTranslate.card(15).name == "4D"
+    assert AOCTranslate.card(25).name == "AD"
+    assert AOCTranslate.card(26).name == "2H"
+    assert AOCTranslate.card(38).name == "AH"
+    assert AOCTranslate.card(51).name == "AS"
+
+    assert AOCTranslate.cardstr(Card.card_from_char("AS")) == 51
+    assert AOCTranslate.cardstr(Card.card_from_char("2C")) == 0
+
+    # Convert all card indices to card and get back the cards and make sure
+    # that we get back the original
+    for _ in range(52):
+        c = AOCTranslate.card(_)
+        ind = AOCTranslate.cardstr(c)
+        assert _ == ind
+
+    print("All tests for aoctranslate.py passed")
