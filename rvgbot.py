@@ -1,7 +1,9 @@
 import asyncio
+import logging
 import time
 import socketio
 import json
+import argparse
 
 import find_src
 from player.bot import Bot
@@ -12,8 +14,8 @@ from player.aoctranslate import AOCTranslate
 newseat = None
 newhand = None
 
-bot = Bot.getBot("N")
-print(bot)
+# bot will be created in main
+bot = None
 
 loop = asyncio.get_event_loop()
 #sio = socketio.AsyncClient(logger=True, engineio_logger=True,ssl_verify=False)
@@ -152,5 +154,18 @@ async def start_server():
 
 
 if __name__ == '__main__':
+    mylogger = logging.getLogger(__name__)
+    mylogger.setLevel(logging.DEBUG)
+
+    parser = argparse.ArgumentParser(
+        description="Create an AOC client"
+    )
+    parser.add_argument("--player", dest="who", default="N", choices=seats)
+
+    args = parser.parse_args()
+    mylogger.info("Creating bot for position " + args.who)
+    bot = Bot.getBot(args.who)
+    print(bot)
+
     loop.run_until_complete(start_server())
     pass
