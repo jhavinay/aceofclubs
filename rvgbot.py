@@ -88,15 +88,25 @@ async def cards(data):
 
 @sio.event(namespace='/mtable')
 async def bid_play(data):
-     print('got bid_play'+json.dumps(data))
-     global roundDataId
-     global boardNo
-     roundDataId=data["roundDataId"]
-     bidsMade = data["bids"]
-     newboard=data["boardNo"]
-     if newboard != boardNo:
-        boardNo=newBoard
+    print('got bid_play'+json.dumps(data))
+    global roundDataId
+    global boardNo
+    roundDataId=data["roundDataId"]
+    tmpboard=data["boardNo"]
+    bidsMade = data["bids"]
+    auction = AOCTranslate.getAuction(bidsMade, boardNo)
+    print("auction is {}".format(auction))
+    if tmpboard != boardNo:
+        boardNo=tmpboard
+        print("new hand is {}".format(newhand))
         bot.resetHand(newhand, boardNo, newseat)
+        bot.resetAuction(auction)
+    else:
+        bot.applyAuctionDiff(auction)
+
+'''
+got bid_play{"roundDataId": 107672, "boardNo": 1, "status": "BID", "contract": null, "bids": ["ps ;N", "ps ;E", "1H ;S", "  X;W", "ps ;N", "1S ;E"], "nextBid": "1NX;S", "plays": [], "nextPlay": null, "claims": [], "northSees": [], "eastSees": [], "southSees": [], "westSees": [], "undo": null, "id": 2559}
+'''
 
 @sio.event(namespace='/mtable')
 async def player_join(data):
@@ -120,13 +130,10 @@ async def bid_made(data):
      [lastBidStr,lastBidPos]=lastBid.split(sep=";")
      #register last bid, if not registered
      print("last call string is " + lastBidStr)
-     if not lastBid:
-        lastCall = AOCTranslate.call(lastBidStr)
+     if lastBid:
+        lastCall = AOCTranslate.call(lastBidStr, lastbidPos)
         print("last call is {}".format(lastCall))
-        lastbidder = AOCTranslate.position(lastBidPos)
-        # callinfo is the explanation of the call - for future use
-        callinfo = ""
-        bot.RegisterCall(lastbidder, lastCall, callinfo)
+        bot.RegisterCall(lastbidder.caller, lastCall, lastCall.info)
      nextBid=data["nextBid"]
      if not nextBid:
         return
