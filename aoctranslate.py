@@ -9,9 +9,12 @@ from core.hand import Hand
 from core.suit import SPADES, HEARTS, DIAMONDS, CLUBS
 from core.card import Card
 from core.call import Call, Pass, Dbl, Rdbl
+from pcekbidder.callWithStateInfo import CallWithStateInfo
+from core.callhistory import CallHistory
 
-pattern_rdbl = re.compile('.*xx$')
-pattern_dbl = re.compile('^[^x]*x$')
+pattern_pass = re.compile('^\s*ps\s*$', re.I)
+pattern_rdbl = re.compile('^\s*XX\s*$', re.I)
+pattern_dbl = re.compile('^\s*X$', re.I)
 
 
 class AOCTranslate():
@@ -26,28 +29,25 @@ class AOCTranslate():
         return Position.from_char(pos)
 
     @classmethod
-    def hand(cls, handstring):
-        return Hand.random()
-
-    @classmethod
-    def call(cls, callstring):
-        if callstring == "ps":
-            return Pass()
+    def call(cls, callstring, who):
+        bidder = cls.position(who)
+        if pattern_pass.match(callstring):
+            return CallWithStateInfo(Pass(), bidder)
         elif pattern_rdbl.match(callstring):
-            return Rdbl()
+            return CallWithStateInfo(Rdbl(), bidder)
         elif pattern_dbl.match(callstring):
-            return Dbl()
+            return CallWithStateInfo(Dbl(), bidder)
         else:
-            return Call(callstring.upper())
+            return CallWithStateInfo(Call(callstring.upper()), bidder)
 
     @classmethod
     def callstring(cls, call):
         if call == Pass():
-            return "ps"
+            return "ps  "
         elif call == Dbl():
-            return "  x"
+            return "   X"
         elif call == Rdbl():
-            return "  xx"
+            return "  XX"
         else:
             return call.name.lower() + "  "
 
@@ -72,10 +72,29 @@ class AOCTranslate():
             hand.num_cards)
         return Hand.from_partial_hand(hand)
 
+    @classmethod
+    def getCalls(cls, bidsMade, dealno):
+        return cls._getCallsAndAuction(bidsMade, dealno)[0]
+
+    @classmethod
+    def getAuction(cls, bidsMade, dealno):
+        return cls._getCallsAndAuction(bidsMade, dealno)[1]
+
+    @classmethod
+    def _getCallsAndAuction(cls, bidsMade, dealno):
+        tmp_auction = CallHistory.empty_for_board_number(dealno)
+        allCalls = []
+        for actions in bidsMade:
+            (call, caller) = actions.split(sep=";")
+            call = cls.call(call.strip(), caller.strip())
+            allCalls.append(call)
+            tmp_auction.append_call(call)
+        return (allCalls, tmp_auction)
+
 if __name__ == "__main__":
-    assert AOCTranslate.callstring(Pass()) == "ps"
-    assert re.match(AOCTranslate.callstring(Dbl()), '  x[^x]*')
-    assert re.match(AOCTranslate.callstring(Rdbl()), '  xx$')
+    assert AOCTranslate.callstring(Pass()) == "ps  "
+    assert pattern_dbl.match(AOCTranslate.callstring(Dbl()))
+    assert pattern_rdbl.match(AOCTranslate.callstring(Rdbl()))
 
     assert AOCTranslate.card(0).name == "2C"
     assert AOCTranslate.card(12).name == "AC"
@@ -102,4 +121,10 @@ if __name__ == "__main__":
         ind = AOCTranslate.cardstr(c)
         assert _ == ind
 
+    auctionstr = ["ps ;N", "ps ;E", "1H ;S", "  X;W", "ps ;N", "1S ;E"]
+    auction = AOCTranslate.getAuction(auctionstr, 3)
+    auction_string = auction.calls_string()
+    expected = "P P 1H X P 1S"
+    assert auction_string == expected, "expected {} got {}".format(
+        expected, auction_string)
     print("All tests for aoctranslate.py passed")
