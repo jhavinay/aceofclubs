@@ -11,8 +11,7 @@ from player.aoctranslate import AOCTranslate
 
 # Information about new position, boardno, hand that we will
 # need to pass to bot.reset() at the right time
-newseat = None
-newhand = None
+
 
 # bot will be created in main
 bot = None
@@ -28,11 +27,40 @@ userId=2576
 sectionId=1176
 #tableNo=1,only needed if jooining initially. assuming director as preseated te bot for now so no need to join seat
 
-seat="N" #NEWS
-seatIndex=0
 roundDataId=0
-boardNo=0
 
+# Whenever boardNo is changed, the seat and hand are inconsistent
+# with the boardNo and should be set to None
+# It is only when both of these are non-null that we can
+# start performing other operations
+gboardNo=0
+gseat = None
+gseatIndex = None
+ghand = None
+
+def isDirty():
+    return (gboardNo is None) or (gseat is None) or (ghand is None)
+
+# Function to update the key parameters of a hand safely
+def updateData(newboardNo, newSeat=None, newHand=None):
+    if not isDirty and newboardNo == gboardNo:
+        return
+    # Assumption is that if we get information for
+    # the same board number again we do not update
+    if newBoardNo != gboardno:
+        gboardno = newBoardNo
+        gseat = newSeat
+        ghand = newHand
+    else:
+        if newSeat:
+            gseat = newSeat
+        if newHand:
+            ghand = newHand
+
+    if not isDirty:
+        bot.resetHand(ghand, gboardNo, gseat)
+    return
+            
 
 async def send_ping():
     global start_timer
@@ -82,25 +110,27 @@ async def cards(data):
      print('got cards'+json.dumps(data))
      print(data[seatIndex])
      newhand = AOCTranslate.getHand(data[seatIndex])
-     print(bot)
-
+     # TODO: call updateData() here
+     newseat=seats[index]
+     updateData(newHand=newHand, newSeat=newSeat, newBoardNo=newBoardNo)
 
 
 @sio.event(namespace='/mtable')
 async def bid_play(data):
     print('got bid_play'+json.dumps(data))
     global roundDataId
-    global boardNo
+    global gboardNo
     roundDataId=data["roundDataId"]
     tmpboard=data["boardNo"]
     bidsMade = data["bids"]
     auction = AOCTranslate.getAuction(bidsMade, boardNo)
     print("auction is {}".format(auction))
+    if not isDirty:
+        bot.resetAuction(auction)
     if tmpboard != boardNo:
         boardNo=tmpboard
+        # TODO: call updateData() here
         print("new hand is {}".format(newhand))
-        bot.resetHand(newhand, boardNo, newseat)
-        bot.resetAuction(auction)
     else:
         bot.applyAuctionDiff(auction)
 
@@ -113,10 +143,9 @@ async def player_join(data):
     print('got player_join')
     for index, player in enumerate(data) :
         if player !=None and player["id"] ==userId:
-            global seat
             seat=seats[index]
-            global newseat
             newseat = AOCTranslate.position(seat)
+            updateData(newBoardno=boardno, seat=newseat)
             print("new seat is {}".format(newseat))
             global seatIndex
             seatIndex=index
