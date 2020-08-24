@@ -4,6 +4,7 @@ if __name__ == "__main__":
 
 import re
 from core.position import Position
+from core.partialhand import PartialHand
 from core.hand import Hand
 from core.suit import SPADES, HEARTS, DIAMONDS, CLUBS
 from core.card import Card
@@ -61,6 +62,16 @@ class AOCTranslate():
     def cardstr(cls, card):
         return 13 * card.suit.index + card.index()
 
+    @classmethod
+    def getHand(cls, cardnos):
+        hand = PartialHand.empty()
+        for c in cardnos:
+            hand.addCard(cls.card(c))
+        print(hand)
+        assert hand.num_cards() == 13, "got {} cards in hand".format(
+            hand.num_cards)
+        return Hand.from_partial_hand(hand)
+
 if __name__ == "__main__":
     assert AOCTranslate.callstring(Pass()) == "ps"
     assert re.match(AOCTranslate.callstring(Dbl()), '  x[^x]*')
@@ -77,6 +88,13 @@ if __name__ == "__main__":
     assert AOCTranslate.cardstr(Card.card_from_char("AS")) == 51
     assert AOCTranslate.cardstr(Card.card_from_char("2C")) == 0
 
+    print("Test for getHand")
+    expected = "KJ8.AQ8754.Q4.QT"
+    myhand = AOCTranslate.getHand(
+        [50, 48, 45, 38, 36, 32, 31, 29, 28, 10, 8, 23, 15])
+    handstr = myhand.shdc_dot_string()
+    assert handstr == expected, "expected {}, got {}".format(
+        expected, handstr)
     # Convert all card indices to card and get back the cards and make sure
     # that we get back the original
     for _ in range(52):

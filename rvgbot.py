@@ -80,6 +80,12 @@ async def chat_res(data):
 @sio.event(namespace='/mtable')
 async def cards(data):
      print('got cards'+json.dumps(data))
+     print(data[seatIndex])
+     newhand = AOCTranslate.getHand(data[seatIndex])
+     bot.resetHand(newhand, boardNo, newseat)
+     print(bot)
+
+
 
 @sio.event(namespace='/mtable')
 async def bid_play(data):
@@ -105,11 +111,14 @@ async def player_join(data):
 
 @sio.event(namespace='/mtable')
 async def bid_made(data):
-     print('got bid_made')
+     print('got bid_made' + json.dumps(data))
      lastBid=data["lastBid"]
+     print("lastBid string is " + lastBid)
      [lastBidStr,lastBidPos]=lastBid.split(sep=";")
      #register last bid, if not registered
+     print("last call string is " + lastBidStr)
      lastCall = AOCTranslate.call(lastBidStr)
+     print("last call is {}".format(lastCall))
      lastbidder = AOCTranslate.position(lastBidPos)
      # callinfo is the explanation of the call - for future use
      callinfo = ""
