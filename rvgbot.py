@@ -82,18 +82,21 @@ async def cards(data):
      print('got cards'+json.dumps(data))
      print(data[seatIndex])
      newhand = AOCTranslate.getHand(data[seatIndex])
-     bot.resetHand(newhand, boardNo, newseat)
      print(bot)
 
 
 
 @sio.event(namespace='/mtable')
 async def bid_play(data):
-    print('got bid_play')
-    global roundDataId
-    global boardNo
-    roundDataId=data["roundDataId"]
-    boardNo=data["boardNo"]
+     print('got bid_play'+json.dumps(data))
+     global roundDataId
+     global boardNo
+     roundDataId=data["roundDataId"]
+     bidsMade = data["bids"]
+     newboard=data["boardNo"]
+     if newboard != boardNo:
+        boardNo=newBoard
+        bot.resetHand(newhand, boardNo, newseat)
 
 @sio.event(namespace='/mtable')
 async def player_join(data):
@@ -117,16 +120,18 @@ async def bid_made(data):
      [lastBidStr,lastBidPos]=lastBid.split(sep=";")
      #register last bid, if not registered
      print("last call string is " + lastBidStr)
-     lastCall = AOCTranslate.call(lastBidStr)
-     print("last call is {}".format(lastCall))
-     lastbidder = AOCTranslate.position(lastBidPos)
-     # callinfo is the explanation of the call - for future use
-     callinfo = ""
-     bot.RegisterCall(lastbidder, lastCall, callinfo)
+     if not lastBid:
+        lastCall = AOCTranslate.call(lastBidStr)
+        print("last call is {}".format(lastCall))
+        lastbidder = AOCTranslate.position(lastBidPos)
+        # callinfo is the explanation of the call - for future use
+        callinfo = ""
+        bot.RegisterCall(lastbidder, lastCall, callinfo)
      nextBid=data["nextBid"]
+     if not nextBid:
+        return
      [nextBidStr,nextBidPos]=nextBid.split(sep=";")
      if nextBidPos==seat:
-        #getbid
         bidToMake, info = bot.getNextCallAndStateInfo()
         bidstr = AOCTranslate.callstring(bidToMake)
         print("making bid " +bidstr) 
